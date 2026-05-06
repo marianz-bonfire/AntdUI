@@ -161,8 +161,8 @@ namespace AntdUI
         {
             if (YDR)
             {
-                YearFormat = "yyyy";
-                MonthFormat = "MMM";
+                YearFormat = Localization.Get("YearFormat", "yyyy");
+                MonthFormat = Localization.Get("MonthFormat", "MMM");
                 Mon = Localization.Get("Mon", "Mon");
                 Tue = Localization.Get("Tue", "Tue");
                 Wed = Localization.Get("Wed", "Wed");

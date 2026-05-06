@@ -1088,6 +1088,12 @@ namespace AntdUI
 
         #endregion
 
+        /// <summary>
+        /// 虚拟模式
+        /// </summary>
+        [Description("虚拟模式"), Category(nameof(CategoryAttribute.Appearance)), DefaultValue(false)]
+        public bool VirtualMode { get; set; }
+
         #region 方法
 
         #region 修改文本
@@ -1485,15 +1491,22 @@ namespace AntdUI
         /// 当前位置插入文本
         /// </summary>
         /// <param name="text">文本</param>
-        /// <param name="ismax">是否限制MaxLength</param>
-        public void EnterText(string text, bool ismax = true)
+        public void EnterText(string text) => EnterText(text, true, false);
+
+        /// <summary>
+        /// 当前位置插入文本
+        /// </summary>
+        /// <param name="text">文本</param>
+        /// <param name="isMax">是否限制MaxLength</param>
+        public void EnterText(string text, bool isMax, bool isVirtual)
         {
             CloseContextMenu();
             if (ReadOnly || BanInput) return;
             int offset = 0, rdcount = 0;
+            int? lenTmp = null;
             if (cache_font == null)
             {
-                if (ismax && text.Length > MaxLength)
+                if (isMax && text.Length > MaxLength)
                 {
                     text = text.Substring(0, MaxLength);
                     if (text.Length == 0) return;
@@ -1506,7 +1519,7 @@ namespace AntdUI
                 if (selectionLength > 0)
                 {
                     int start = selectionStartTemp, end = selectionLength;
-                    if (ismax && (cache_font.Count - end + text.Length) > MaxLength)
+                    if (isMax && (cache_font.Count - end + text.Length) > MaxLength)
                     {
                         if (MaxLength > cache_font.Count)
                         {
@@ -1517,14 +1530,29 @@ namespace AntdUI
                     }
                     AddHistoryRecord();
                     SetTextRemove(ref cache_font, start, end, true);
-                    if (SetTextIn(text, start, out _, false)) rdcount++;
+                    if (isVirtual || VirtualMode)
+                    {
+                        if (SetTextIn(text, start, out int len_tmp, false)) rdcount++;
+                        lenTmp = len_tmp;
+                    }
+                    else
+                    {
+                        int end_temp = start + end;
+                        var texts = new List<string>(end);
+                        foreach (var it in cache_font)
+                        {
+                            if (it.i < start || it.i >= end_temp) texts.Add(it.text);
+                        }
+                        texts.Insert(start, text);
+                        if (SetText(string.Join("", texts), true, false)) rdcount++;
+                    }
                     if (SetSelectionLength(0)) rdcount++;
                     offset = start;
                 }
                 else
                 {
                     int start = selectionStart - 1;
-                    if (ismax && (cache_font.Count + text.Length) > MaxLength)
+                    if (isMax && (cache_font.Count + text.Length) > MaxLength)
                     {
                         if (MaxLength > cache_font.Count)
                         {
@@ -1535,10 +1563,21 @@ namespace AntdUI
                     }
                     AddHistoryRecord();
                     offset = start + 1;
-                    if (SetTextIn(text, offset, out _, false)) rdcount++;
+                    if (isVirtual || VirtualMode)
+                    {
+                        if (SetTextIn(text, offset, out int len_tmp, false)) rdcount++;
+                        lenTmp = len_tmp;
+                    }
+                    else
+                    {
+                        var texts = new List<string>(cache_font.Count);
+                        foreach (var it in cache_font) texts.Add(it.text);
+                        texts.Insert(offset, text);
+                        if (SetText(string.Join("", texts), true, false)) rdcount++;
+                    }
                 }
             }
-            int len = GraphemeSplitter.EachCount(text);
+            int len = lenTmp ?? GraphemeSplitter.EachCount(text);
             if (SetSelectionStart(offset + len)) rdcount++;
             OnTextChanged(EventArgs.Empty);
             OnPropertyChanged(nameof(Text));

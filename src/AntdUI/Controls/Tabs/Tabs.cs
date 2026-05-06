@@ -1745,11 +1745,14 @@ namespace AntdUI
                 item.PARENT = it;
                 if (it.SelectedIndex == 0 && Count == 1)
                 {
-                    if (it.InvokeRequired) it.Invoke(() =>
+                    if (it.InvokeRequired)
                     {
-                        it.Controls.Add(item);
-                        item.Showed = true;
-                    });
+                        it.Invoke(() =>
+                        {
+                            it.Controls.Add(item);
+                            item.Showed = true;
+                        });
+                    }
                     else
                     {
                         it.Controls.Add(item);

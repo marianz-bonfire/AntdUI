@@ -359,10 +359,10 @@ namespace AntdUI
                     break;
                 //========================================================
                 case ShortcutKeys.Tab:
-                    if (AcceptsTab) EnterText("\t");
+                    if (AcceptsTab) EnterText("\t", true, true);
                     break;
                 case ShortcutKeys.Enter:
-                    if (multiline) EnterText(Environment.NewLine);
+                    if (multiline) EnterText(Environment.NewLine, true, true);
                     break;
                 //========================================================
                 case ShortcutKeys.ControlA:
