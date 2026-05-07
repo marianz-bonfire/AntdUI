@@ -62,27 +62,27 @@ namespace AntdUI
                 ThreadState = null;
                 if (visibleHeader && emptyHeader && columns != null && columns.Count > 0)
                 {
-                    var _rows = LayoutDesign(rect, new TempTable(new TempiColumn[0], new IRow[0], null), out bool Processing, out var Columns, out var ColWidth);
-                    rows = LayoutDesign(rect, _rows, Columns, ColWidth, out int x, out int y, out bool is_exceed);
+                    var _rows = LayoutDesign(rect, new TempTable(new TempiColumn[0], new IRow[0], null), out bool Processing, out var Columns, out var ColWidth, out int LastRowIndex);
+                    rows = LayoutDesign(rect, _rows, Columns, ColWidth, LastRowIndex, out int x, out int y, out bool is_exceed);
                     ScrollBar.SetVrSize(is_exceed ? x : 0, y, rect);
                     return;
                 }
             }
             else
             {
-                var _rows = LayoutDesign(rect, dataTmp, out bool Processing, out var Columns, out var ColWidth);
+                var _rows = LayoutDesign(rect, dataTmp, out bool Processing, out var Columns, out var ColWidth, out int LastRowIndex);
                 if (Columns.Count > 0)
                 {
                     if (visibleHeader && EmptyHeader && _rows.Count == 0)
                     {
-                        rows = LayoutDesign(rect, _rows, Columns, ColWidth, out int x, out int y, out bool is_exceed);
+                        rows = LayoutDesign(rect, _rows, Columns, ColWidth, LastRowIndex, out int x, out int y, out bool is_exceed);
                         ScrollBar.SetVrSize(is_exceed ? x : 0, y, rect);
                         ThreadState?.Dispose(); ThreadState = null;
                         return;
                     }
                     else if (_rows.Count > 0)
                     {
-                        rows = LayoutDesign(rect, _rows, Columns, ColWidth, out int x, out int y, out bool is_exceed);
+                        rows = LayoutDesign(rect, _rows, Columns, ColWidth, LastRowIndex, out int x, out int y, out bool is_exceed);
                         if (scrollBarAvoidHeader && visibleHeader && fixedHeader)
                         {
                             int headerHeight = rows.HeaderHeight;
@@ -121,7 +121,7 @@ namespace AntdUI
             rows = null;
         }
 
-        List<RowTemplate?> LayoutDesign(Rectangle rect, TempTable dataTmp, out bool Processing, out List<Column> Columns, out Dictionary<int, object> ColWidth)
+        List<RowTemplate?> LayoutDesign(Rectangle rect, TempTable dataTmp, out bool Processing, out List<Column> Columns, out Dictionary<int, object> ColWidth, out int LastRowIndex)
         {
             int processing = 0;
             var col_width = new Dictionary<int, object>();
@@ -167,7 +167,7 @@ namespace AntdUI
                     _RowHeightHeader = RowHeightHeader;
                     _RowHeight = RowHeight;
 
-                    int sy = ScrollBar.ValueY, visibleRowCount = (int)Math.Ceiling((double)rect.Height / RowHeight) + 2;
+                    int sy = ScrollBar.ValueY, visibleRowCount = (int)Math.Ceiling((double)rect.Height / RowHeight);
 
                     start = (int)Math.Floor((double)sy / RowHeight);
                     end = start + visibleRowCount;
@@ -179,6 +179,7 @@ namespace AntdUI
 
             dataLen = ForRow(dataTmp);
             isMVVM = false;
+            int lastRowIndex = 0;
             ForRow(dataTmp, start, end, row =>
             {
                 if (row == null)
@@ -191,7 +192,11 @@ namespace AntdUI
                     var cells = new List<CELL>(_columns.Count);
                     int check_count = 0;
                     foreach (var column in _columns) AddRows(ref cells, ref processing, ref check_count, column, row, column.Key);
-                    if (cells.Count > 0) AddRows(ref _rows, cells.ToArray(), row, check_count);
+                    if (cells.Count > 0)
+                    {
+                        AddRows(ref _rows, cells.ToArray(), row, check_count);
+                        lastRowIndex = _rows.Count;
+                    }
                 }
             });
             if (dataTmp.summary != null)
@@ -210,6 +215,7 @@ namespace AntdUI
                 }
             }
             dataOne = false;
+            LastRowIndex = lastRowIndex;
             Processing = processing > 0;
             Columns = _columns;
             ColWidth = col_width;
@@ -218,7 +224,7 @@ namespace AntdUI
 
         int? _RowHeightHeader, _RowHeight;
 
-        RowList LayoutDesign(Rectangle rect, List<RowTemplate?> _rows, List<Column> _columns, Dictionary<int, object> col_width, out int _x, out int _y, out bool _is_exceed)
+        RowList LayoutDesign(Rectangle rect, List<RowTemplate?> _rows, List<Column> _columns, Dictionary<int, object> col_width, int lastRowIndex, out int _x, out int _y, out bool _is_exceed)
         {
             #region 添加表头
 
@@ -463,8 +469,7 @@ namespace AntdUI
 
                 #endregion
 
-                int last_index = _rows.Count - 1;
-                var last_row = _rows[last_index];
+                var last_row = _rows[lastRowIndex];
                 var last = last_row!.cells[last_row.cells.Length - 1];
 
                 bool isempty = emptyHeader && _rows.Count == 1;
@@ -659,7 +664,7 @@ namespace AntdUI
             {
                 foreach (var it in data_temp.rows)
                 {
-                    if (it.i_virtual == 0 || it.i_virtual == lenr) action(it);
+                    if (it.i == 0 || it.i == lenr) action(it);
                     else if (it.add && it.i_virtual > -1)
                     {
                         if (it.i_virtual >= i_start && it.i_virtual < i_end) action(it);
