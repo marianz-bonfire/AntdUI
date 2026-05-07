@@ -659,7 +659,7 @@ namespace AntdUI
             {
                 foreach (var it in data_temp.rows)
                 {
-                    if (it.i == 0 || it.i == lenr) action(it);
+                    if (it.i_virtual == 0 || it.i_virtual == lenr) action(it);
                     else if (it.add && it.i_virtual > -1)
                     {
                         if (it.i_virtual >= i_start && it.i_virtual < i_end) action(it);

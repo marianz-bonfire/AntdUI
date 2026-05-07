@@ -23,7 +23,7 @@ namespace AntdUI
         #region Ctor
 
         IList<object>? CustomSource;
-        bool realTime = false;
+        bool realTime = false, is_virtual = false;
         public FilterControl(Table table, System.Drawing.Font font, Column currentColumn, IList<object>? customSource)
         {
             InitializeComponent();
@@ -40,7 +40,9 @@ namespace AntdUI
             inputSearch.PlaceholderText = Localization.Get("Filter.Search", "搜索") + " " + currentColumn.Title;
             InitConditions();
             InitFilterEdit();
-            InitFilterValues();
+            is_virtual = IsVirtual(400);
+            if (is_virtual) dv.Empty = false;
+            else InitFilterValues();
 
             btn_clean.Enabled = Option.Enabled;
         }
@@ -146,6 +148,13 @@ namespace AntdUI
             }
         }
 
+        bool IsVirtual(int max)
+        {
+            var source = TableView.dataTmp?.rows;
+            if (source == null) return false;
+            if (CustomSource != null && CustomSource.Count > 0) return CustomSource.Count > max;
+            else return source.Length > max;
+        }
         private void InitFilterValues()
         {
             var source = TableView.dataTmp?.rows;
@@ -261,7 +270,16 @@ namespace AntdUI
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            isLoad = true;
+            if (is_virtual)
+            {
+                Spin.open(this, config =>
+                {
+                    InitFilterValues();
+                    dv.Empty = false;
+                    isLoad = true;
+                });
+            }
+            else isLoad = true;
         }
 
         #endregion
@@ -595,25 +613,33 @@ namespace AntdUI
             if (_table.dataTmp == null) return;
             if (dv.DataSource is List<AntItem[]> list)
             {
-                var tmp = new List<object?>(list.Count);
-                foreach (var it in list)
+                btn_ok.Loading = true;
+                ITask.Run(() =>
                 {
-                    if (it[1].value is bool check && check)
+                    var tmp = new List<object?>(list.Count);
+                    foreach (var it in list)
                     {
-                        if (it[0].value is List<object> data) tmp.AddRange(data);
-                        else tmp.Add(null);
+                        if (it[1].value is bool check && check)
+                        {
+                            if (it[0].value is List<object> data) tmp.AddRange(data);
+                            else tmp.Add(null);
+                        }
                     }
-                }
-                if (tmp.Count == _table.dataTmp.RowsCache.Length) Option.FilterValues = null;
-                else Option.FilterValues = tmp;
-                Option.UpdateFilter();
-                if (_table.Filter_PopupEndEventMethod(Option)) Dispose();
-                else
-                {
-                    LoadOffset();
-                    btn_clean.Enabled = Option.Enabled;
-                    InitFilterValues();
-                }
+                    if (tmp.Count == _table.dataTmp.RowsCache.Length) Option.FilterValues = null;
+                    else Option.FilterValues = tmp;
+                    Option.UpdateFilter();
+                    BeginInvoke(() =>
+                    {
+                        if (_table.Filter_PopupEndEventMethod(Option)) Dispose();
+                        else
+                        {
+                            LoadOffset();
+                            btn_clean.Enabled = Option.Enabled;
+                            btn_ok.Loading = false;
+                            InitFilterValues();
+                        }
+                    });
+                });
             }
         }
 
@@ -640,5 +666,15 @@ namespace AntdUI
         }
 
         private void dv_CheckedChanged(object sender, TableCheckEventArgs e) => Apply();
+
+#if NET40 || NET46 || NET48
+
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public IAsyncResult BeginInvoke(Action method) => BeginInvoke(method, null);
+
+        public void Invoke(Action method) => _ = Invoke(method, null);
+        public T Invoke<T>(Func<T> method) => (T)Invoke(method, null);
+
+#endif
     }
 }

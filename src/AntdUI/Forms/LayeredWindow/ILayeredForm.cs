@@ -78,6 +78,8 @@ namespace AntdUI
             handle = null;
             messageHandler?.Dispose();
             messageHandler = null;
+            popover?.CloseLockedDel(this);
+            popover = null;
             Win32.Render.Dispose(memDc, ref hBitmap, ref oldBits);
             if (memDc == IntPtr.Zero) return;
             Win32.Render.DeleteDC(memDc);
@@ -312,7 +314,6 @@ namespace AntdUI
         {
             try
             {
-                popover?.CloseLockedDel(this);
                 if (IsDisposed) return;
                 IClosing();
                 if (InvokeRequired) Invoke(Dispose);
