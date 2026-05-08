@@ -1529,9 +1529,9 @@ namespace AntdUI
                         else return;
                     }
                     AddHistoryRecord();
-                    SetTextRemove(ref cache_font, start, end, true);
                     if (isVirtual || VirtualMode)
                     {
+                        SetTextRemove(ref cache_font, start, end, true);
                         if (SetTextIn(text, start, out int len_tmp, false)) rdcount++;
                         lenTmp = len_tmp;
                     }
