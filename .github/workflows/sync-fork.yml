@@ -27,8 +27,8 @@ jobs:
 
           git fetch upstream
 
-          git checkout master
+          git checkout main
 
-          git merge upstream/master --ff-only
+          git merge upstream/main --ff-only
 
-          git push origin master
+          git push origin main
