@@ -1,5 +1,14 @@
 [Home](Home.md)・[UpdateLog](UpdateLog.md)・[Config](Config.md)・[Theme](Theme.md)
 
+### `2.3.13` 2026-05-12
+
+- ➕ Input VirtualMode
+- ✍️ Table Virtual Mode
+- ✍️ Table filters a large amount of data and adds new loads
+- ✍️ Spin causes some bubbles to fail to close properly
+- ✍️ Select and replace input text with misalignment
+- ✍️ Allow full localization of DatePicker header
+
 ### `2.3.12` 2026-04-30
 
 - ➕ Label PrefixColour/SuffixColour
