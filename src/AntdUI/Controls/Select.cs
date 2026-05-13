@@ -820,6 +820,9 @@ namespace AntdUI
 
         public object Tag { get; set; }
 
+        internal int TextWidth { get; set; }
+        internal int SubTextWidth { get; set; }
+
         #region 主题
 
         /// <summary>
@@ -1334,6 +1337,7 @@ namespace AntdUI
 
         public Rectangle Rect { get; set; }
         public Rectangle RectText { get; set; }
+        public Rectangle RectSubText { get; set; }
         public Rectangle RectArrow { get; set; }
         public Rectangle RectClose { get; set; }
         public bool HoverClose { get; set; }
@@ -1570,7 +1574,7 @@ namespace AntdUI
             }
         }
 
-        public IList<object> List { get; private set; }
+        public IList<object> List { get; internal set; }
         public Dictionary<object, int> Dir { get; private set; }
 
         public int this[object obj]
