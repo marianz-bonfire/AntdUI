@@ -1278,21 +1278,58 @@ namespace AntdUI
 
         int[]? SortHeader;
         int[]? SortData;
-        List<SortModel> SortDatas(Column column)
+        List<SortModel> SortDatas(Column column, out int count)
         {
+            count = 0;
             if (dataTmp == null || dataTmp.rows.Length == 0) return new List<SortModel>(0);
             var list = new List<SortModel>(dataTmp.rows.Length);
             if (dataTmp.rows[0].cells.ContainsKey(column.Key))
             {
-                for (int i_r = 0; i_r < dataTmp.rows.Length; i_r++) list.Add(new SortModel(i_r, OGetValue(dataTmp, i_r, column.Key)?.ToString()));
-            }
-            else if (column.Render == null) return list;
-            else
-            {
-                for (int i_r = 0; i_r < dataTmp.rows.Length; i_r++)
+                var dir = new Dictionary<object, List<SortModel>?>(dataTmp.rows.Length);
+                var dir_st = new Dictionary<object, SortModel>(dataTmp.rows.Length);
+                if (column.Render == null)
                 {
-                    var obj = column.Render(null, dataTmp.rows[i_r].record, i_r);
-                    list.Add(new SortModel(i_r, obj?.ToString()));
+                    for (int i_r = 0; i_r < dataTmp.rows.Length; i_r++)
+                    {
+                        var row = dataTmp.rows[i_r];
+                        if (row.cells.TryGetValue(column.Key, out var value))
+                        {
+                            var item = new SortModel(i_r, OGetValue(row.record, value));
+                            if (row.fid == null) list.Add(item);
+                            else
+                            {
+                                if (dir.ContainsKey(row.fid))
+                                {
+                                    if (dir[row.fid] == null) dir[row.fid] = dir_st[row.fid].children = new List<SortModel>(dataTmp.rows.Length);
+                                    dir[row.fid]!.Add(item);
+                                }
+                            }
+                            dir.Add(row.record, null);
+                            dir_st.Add(row.record, item);
+                            count++;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i_r = 0; i_r < dataTmp.rows.Length; i_r++)
+                    {
+                        var row = dataTmp.rows[i_r];
+                        var obj = column.Render(row.cells[column.Key], dataTmp.rows[i_r].record, i_r);
+                        var item = new SortModel(i_r, obj?.ToString());
+                        if (row.fid == null) list.Add(item);
+                        else
+                        {
+                            if (dir.ContainsKey(row.fid))
+                            {
+                                if (dir[row.fid] == null) dir[row.fid] = dir_st[row.fid].children = new List<SortModel>(dataTmp.rows.Length);
+                                dir[row.fid]!.Add(item);
+                            }
+                        }
+                        dir.Add(row.record, null);
+                        dir_st.Add(row.record, item);
+                        count++;
+                    }
                 }
             }
             return list;
@@ -1300,21 +1337,47 @@ namespace AntdUI
 
         void SortDataASC(Column column)
         {
-            var list = SortDatas(column);
-            if (CustomSort == null) list.Sort((x, y) => FilesNameComparerClass.Compare(x.v, y.v));
-            else list.Sort((x, y) => CustomSort(x.v, y.v));
-            var SortTmp = new List<int>(list.Count);
-            foreach (var it in list) SortTmp.Add(it.i);
+            var list = SortDatas(column, out int count);
+            SortDataASC(list);
+            var SortTmp = new List<int>(count);
+            SortChildren(ref SortTmp, list);
             SortData = SortTmp.ToArray();
         }
         void SortDataDESC(Column column)
         {
-            var list = SortDatas(column);
+            var list = SortDatas(column, out int count);
+            SortDataDESC(list);
+            var SortTmp = new List<int>(count);
+            SortChildren(ref SortTmp, list);
+            SortData = SortTmp.ToArray();
+        }
+        void SortDataASC(List<SortModel> list)
+        {
+            if (CustomSort == null) list.Sort((x, y) => FilesNameComparerClass.Compare(x.v, y.v));
+            else list.Sort((x, y) => CustomSort(x.v, y.v));
+            foreach (var it in list)
+            {
+                if (it.children == null) continue;
+                SortDataASC(it.children);
+            }
+        }
+        void SortDataDESC(List<SortModel> list)
+        {
             if (CustomSort == null) list.Sort((y, x) => FilesNameComparerClass.Compare(x.v, y.v));
             else list.Sort((y, x) => CustomSort(x.v, y.v));
-            var SortTmp = new List<int>(list.Count);
-            foreach (var it in list) SortTmp.Add(it.i);
-            SortData = SortTmp.ToArray();
+            foreach (var it in list)
+            {
+                if (it.children == null) continue;
+                SortDataDESC(it.children);
+            }
+        }
+        void SortChildren(ref List<int> list, List<SortModel> data)
+        {
+            foreach (var it in data)
+            {
+                list.Add(it.i);
+                if (it.children != null) SortChildren(ref list, it.children);
+            }
         }
 
         #endregion

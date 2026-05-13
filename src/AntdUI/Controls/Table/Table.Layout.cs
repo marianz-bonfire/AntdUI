@@ -1079,43 +1079,39 @@ namespace AntdUI
             return row;
         }
 
-        string? OGetValue(TempTable data_temp, int i_r, string key)
+        string? OGetValue(object record, object? value)
         {
-            if (data_temp.rows[i_r].cells.TryGetValue(key, out var value))
+            if (value is AntItem item)
             {
-                if (value is AntItem item)
+                var val = item.value;
+                if (val is IList<ICell> icells)
                 {
-                    var val = item.value;
-                    if (val is IList<ICell> icells)
+                    var vals = new List<string>(icells.Count);
+                    foreach (var cell in icells)
                     {
-                        var vals = new List<string>(icells.Count);
-                        foreach (var cell in icells)
-                        {
-                            var str = cell.ToString();
-                            if (!string.IsNullOrEmpty(str)) vals.Add(str);
-                        }
-                        return string.Join(" ", vals);
+                        var str = cell.ToString();
+                        if (!string.IsNullOrEmpty(str)) vals.Add(str);
                     }
-                    else return val?.ToString();
+                    return string.Join(" ", vals);
                 }
-                else if (value is PropertyDescriptor prop)
-                {
-                    var val = prop.GetValue(data_temp.rows[i_r].record);
-                    if (val is IList<ICell> icells)
-                    {
-                        var vals = new List<string>(icells.Count);
-                        foreach (var cell in icells)
-                        {
-                            var str = cell.ToString();
-                            if (!string.IsNullOrEmpty(str)) vals.Add(str);
-                        }
-                        return string.Join(" ", vals);
-                    }
-                    else return val?.ToString();
-                }
-                else return value?.ToString();
+                else return val?.ToString();
             }
-            return null;
+            else if (value is PropertyDescriptor prop)
+            {
+                var val = prop.GetValue(record);
+                if (val is IList<ICell> icells)
+                {
+                    var vals = new List<string>(icells.Count);
+                    foreach (var cell in icells)
+                    {
+                        var str = cell.ToString();
+                        if (!string.IsNullOrEmpty(str)) vals.Add(str);
+                    }
+                    return string.Join(" ", vals);
+                }
+                else return val?.ToString();
+            }
+            else return value?.ToString();
         }
 
         object? OGetValue(object? ov, object record, out PropertyDescriptor? property, out object? value)

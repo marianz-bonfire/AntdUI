@@ -4,6 +4,8 @@
 // GitHub: https://github.com/AntdUI/AntdUI
 // GitCode: https://gitcode.com/AntdUI/AntdUI
 
+using System.Collections.Generic;
+
 namespace AntdUI
 {
     ///<summary>
@@ -73,5 +75,7 @@ namespace AntdUI
         public SortModel(int _i, string? _v) { i = _i; v = _v ?? ""; }
         public int i { get; set; }
         public string v { get; set; }
+
+        public List<SortModel>? children { get; set; }
     }
 }
