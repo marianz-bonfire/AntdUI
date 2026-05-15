@@ -47,12 +47,12 @@ namespace AntdUI
                     is_clear_down = true;
                     return;
                 }
-                if ((HasPrefix || prefixText != null) && rect_l.Contains(e.X, e.Y) && PrefixClick != null)
+                if ((HasPrefix || PrefixText != null) && rect_l.Contains(e.X, e.Y) && PrefixClick != null)
                 {
                     is_prefix_down = true;
                     return;
                 }
-                if ((HasSuffix || suffixText != null) && rect_r.Contains(e.X, e.Y) && SuffixClick != null)
+                if ((HasSuffix || SuffixText != null) && rect_r.Contains(e.X, e.Y) && SuffixClick != null)
                 {
                     is_suffix_down = true;
                     return;
@@ -189,7 +189,7 @@ namespace AntdUI
                         return;
                     }
                 }
-                if (((HasPrefix || prefixText != null) && rect_l.Contains(e.X, e.Y) && PrefixClick != null) || ((HasSuffix || suffixText != null) && rect_r.Contains(e.X, e.Y) && SuffixClick != null))
+                if (((HasPrefix || PrefixText != null) && rect_l.Contains(e.X, e.Y) && PrefixClick != null) || ((HasSuffix || SuffixText != null) && rect_r.Contains(e.X, e.Y) && SuffixClick != null))
                 {
                     SetCursor(true);
                     return;
