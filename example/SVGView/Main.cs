@@ -39,6 +39,25 @@ namespace SVGView
                 }
             }
         }
+        void ReIdVue(ref string svg)
+        {
+            var id = "data-v-";
+            if (svg.Contains(" " + id))
+            {
+                int i = svg.IndexOf(id);
+                while (i != -1)
+                {
+                    string first = svg.Substring(0, i), last = svg.Substring(i + id.Length + 2);
+                    int tmp = last.IndexOf("=\"\"");
+                    if (tmp == 6)
+                    {
+                        last = last.Substring(tmp + 3).Trim();
+                        svg = first + last;
+                        i = svg.IndexOf(id);
+                    }
+                }
+            }
+        }
 
         void ReNodeOne(ref string svg, string id)
         {
@@ -91,6 +110,7 @@ namespace SVGView
             svg = first + last;
             if (more) ReId(ref svg, "fill");
             ReId(ref svg, "p-id");
+            ReIdVue(ref svg);
             string _tmp = svg.Replace(" >", ">").Replace("\t", "").Replace("\r", "").Replace("\n", "").Replace("fill=\"white\"", "fill=\"#fff\"").Replace("fill=\"black\"", "fill=\"#000\"");
             while (_tmp.Contains("  ")) _tmp = _tmp.Replace("  ", " ");
             return _tmp.Replace("> <", "><").Trim();

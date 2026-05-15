@@ -382,8 +382,16 @@ namespace AntdUI
                 {
                     if (dskey.Contains(i))
                     {
-                        dividerHs[i][1] = rY + gap;
-                        dividerHs[i][2] = rHeight - gap2;
+                        if (dividerHs[i].h)
+                        {
+                            dividerHs[i].h = false;
+                            if (bordered) dividerHs[i].b = rY;
+                            else
+                            {
+                                dividerHs[i].b = rY + gap;
+                                dividerHs[i].c = rHeight - gap2;
+                            }
+                        }
                     }
                     if (handkey.Contains(column.INDEX))
                     {
@@ -494,6 +502,7 @@ namespace AntdUI
         {
             var state = g.Save();
             var rect = new Rectangle(column.RECT_REAL.X, rY, column.RECT_REAL.Width, rHeight);
+            if (bordered) PaintBorder(g, new DividerList(rect.Bottom, column.RECT.X, column.RECT.Width));
             if (item.ForeColor.HasValue) g.DrawText(item.HeaderText, column_font, item.ForeColor.Value, rect, StringFormat(column.COLUMN, true));
             else g.DrawText(item.HeaderText, column_font, fore, rect, StringFormat(column.COLUMN, true));
             g.Restore(state);
@@ -503,6 +512,7 @@ namespace AntdUI
         {
             var state = g.Save();
             var rect = new Rectangle(first.RECT.X, rY, last.RECT.Right - first.RECT.X, rHeight);
+            if (bordered) PaintBorder(g, new DividerList(rect.Bottom, rect.X, rect.Width));
             if (item.ForeColor.HasValue) g.DrawText(item.HeaderText, column_font, item.ForeColor.Value, rect, StringFormat(ColumnAlign.Center));
             else g.DrawText(item.HeaderText, column_font, fore, rect, StringFormat(ColumnAlign.Center));
             g.Restore(state);
@@ -1327,8 +1337,8 @@ namespace AntdUI
 
         #region 边框
 
-        void PaintBorder(Canvas g, int[][] dividers) => PaintBorder(g, dividers, 0);
-        void PaintBorder(Canvas g, int[][] dividers, int s)
+        void PaintBorder(Canvas g, DividerList[] dividers) => PaintBorder(g, dividers, 0);
+        void PaintBorder(Canvas g, DividerList[] dividers, int s)
         {
             var color = borderColor ?? Colour.BorderColor.Get(nameof(Table), ColorScheme);
             float border = BorderCellWidth * Dpi;
@@ -1339,7 +1349,7 @@ namespace AntdUI
                     for (int i = s; i < dividers.Length; i++)
                     {
                         var divider = dividers[i];
-                        g.Fill(color, new Rectangle(divider[1], divider[0] - sp2, divider[2], sp));
+                        g.Fill(color, new Rectangle(divider.b, divider.a - sp2, divider.c, sp));
                     }
                     break;
                 case TableBorderMode.Pen:
@@ -1348,7 +1358,7 @@ namespace AntdUI
                         for (int i = s; i < dividers.Length; i++)
                         {
                             var divider = dividers[i];
-                            g.DrawLine(pen, divider[1], divider[0], divider[1] + divider[2], divider[0]);
+                            g.DrawLine(pen, divider.b, divider.a, divider.b + divider.c, divider.a);
                         }
                     }
                     break;
@@ -1357,12 +1367,12 @@ namespace AntdUI
                     for (int i = s; i < dividers.Length; i++)
                     {
                         var divider = dividers[i];
-                        g.Fill(color, new RectangleF(divider[1], divider[0] - half, divider[2], border));
+                        g.Fill(color, new RectangleF(divider.b, divider.a - half, divider.c, border));
                     }
                     break;
             }
         }
-        void PaintBorder(Canvas g, int[] it)
+        void PaintBorder(Canvas g, DividerList it)
         {
             var color = borderColor ?? Colour.BorderColor.Get(nameof(Table), ColorScheme);
             float border = BorderCellWidth * Dpi;
@@ -1370,21 +1380,21 @@ namespace AntdUI
             {
                 case TableBorderMode.None:
                     int sp = (int)border, sp2 = sp / 2;
-                    g.Fill(color, new Rectangle(it[1], it[0] - sp2, it[2], sp));
+                    g.Fill(color, new Rectangle(it.b, it.a - sp2, it.c, sp));
                     break;
                 case TableBorderMode.Pen:
                     using (var pen = new Pen(color, border))
                     {
-                        g.DrawLine(pen, it[1], it[0], it[1] + it[2], it[0]);
+                        g.DrawLine(pen, it.b, it.a, it.b + it.c, it.a);
                     }
                     break;
                 case TableBorderMode.High:
                     var half = border / 2F;
-                    g.Fill(color, new RectangleF(it[1], it[0] - half, it[2], border));
+                    g.Fill(color, new RectangleF(it.b, it.a - half, it.c, border));
                     break;
             }
         }
-        void PaintBorderH(Canvas g, int[][] dividers)
+        void PaintBorderH(Canvas g, DividerList[] dividers)
         {
             var color = borderColor ?? Colour.BorderColor.Get(nameof(Table), ColorScheme);
             float border = BorderCellWidth * Dpi;
@@ -1394,21 +1404,18 @@ namespace AntdUI
                     int sp = (int)border, sp2 = sp / 2;
                     foreach (var it in dividers)
                     {
-                        g.Fill(color, new RectangleF(it[0] - sp2, it[1], sp, it[2]));
+                        g.Fill(color, new RectangleF(it.a - sp2, it.b, sp, it.c));
                     }
                     break;
                 case TableBorderMode.Pen:
                     using (var pen = new Pen(color, border))
                     {
-                        foreach (var it in dividers) g.DrawLine(pen, it[0], it[1], it[0], it[1] + it[2]);
+                        foreach (var it in dividers) g.DrawLine(pen, it.a, it.b, it.a, it.b + it.c);
                     }
                     break;
                 case TableBorderMode.High:
                     var half = border / 2F;
-                    foreach (var it in dividers)
-                    {
-                        g.Fill(color, new RectangleF(it[0] - half, it[1], border, it[2]));
-                    }
+                    foreach (var it in dividers) g.Fill(color, new RectangleF(it.a - half, it.b, border, it.c));
                     break;
             }
         }

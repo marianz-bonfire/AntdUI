@@ -718,12 +718,12 @@ namespace AntdUI
         }
         int MeasurePrefix(Canvas g)
         {
-            if (PrefixWidth == null) return g.MeasureString(prefixText, Font).Width;
+            if (PrefixWidth == null) return g.MeasureString(PrefixText, Font).Width;
             return (int)(PrefixWidth * Dpi);
         }
         int MeasureSuffix(Canvas g)
         {
-            if (SuffixWidth == null) return g.MeasureString(suffixText, Font).Width;
+            if (SuffixWidth == null) return g.MeasureString(SuffixText, Font).Width;
             return (int)(SuffixWidth * Dpi);
         }
         void RectLR(Rectangle rect, int read_height, int sps, int sps2, int w_L, int h_L, int w_R, int h_R)

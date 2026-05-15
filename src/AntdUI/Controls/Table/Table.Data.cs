@@ -795,11 +795,20 @@ namespace AntdUI
             /// </summary>
             public object? fid { get; set; }
 
+            /// <summary>
+            /// 是否包含子数据
+            /// </summary>
             public bool has_expand { get; set; }
+            /// <summary>
+            /// 是否可以展开（默认）
+            /// </summary>
             public bool can_expand { get; set; }
 
             public bool expand { get; set; }
 
+            /// <summary>
+            /// 树深度
+            /// </summary>
             public int depth { get; set; }
 
             public Dictionary<string, object?> cells { get; set; }

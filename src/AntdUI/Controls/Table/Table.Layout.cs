@@ -32,7 +32,7 @@ namespace AntdUI
 
         internal RowList? rows;
         int rowSummary = 0;
-        int[][] dividers = new int[0][], dividerHs = new int[0][];
+        DividerList[] dividers = new DividerList[0], dividerHs = new DividerList[0];
         MoveHeader[] moveheaders = new MoveHeader[0];
 
         public bool LoadLayout()
@@ -117,7 +117,7 @@ namespace AntdUI
             ThreadState?.Dispose();
             ThreadState = null;
             ScrollBar.SetVrSize(0, 0, Rectangle.Empty);
-            dividers = new int[0][];
+            dividers = new DividerList[0];
             rows = null;
         }
 
@@ -482,7 +482,7 @@ namespace AntdUI
 
                 if (BorderCellWidth > 0)
                 {
-                    List<int[]> _dividerHs = new List<int[]>(firstrow.cells.Length), _dividers = new List<int[]>(_rows.Count);
+                    List<DividerList> _dividerHs = new List<DividerList>(firstrow.cells.Length), _dividers = new List<DividerList>(_rows.Count);
                     foreach (var row in rowlist)
                     {
                         if (row.IsColumn)
@@ -503,7 +503,7 @@ namespace AntdUI
                                     for (int i = 0; i < row.cells.Length - 1; i++)
                                     {
                                         var it = row.cells[i];
-                                        _dividerHs.Add(new int[] { it.RECT.Right, rect.Y, it.RECT.Height });
+                                        _dividerHs.Add(new DividerList(it.RECT.Right, rect.Y, it.RECT.Height));
                                     }
                                 }
                                 else
@@ -511,7 +511,7 @@ namespace AntdUI
                                     for (int i = 0; i < row.cells.Length - 1; i++)
                                     {
                                         var it = row.cells[i];
-                                        _dividerHs.Add(new int[] { it.RECT.Right, rect.Y, rect_real.Height });
+                                        _dividerHs.Add(new DividerList(it.RECT.Right, rect.Y, rect_real.Height));
                                     }
                                 }
                             }
@@ -520,15 +520,15 @@ namespace AntdUI
                                 for (int i = 0; i < row.cells.Length - 1; i++)
                                 {
                                     var it = row.cells[i];
-                                    _dividerHs.Add(new int[] { it.RECT.Right, it.RECT.Y + gap.y, it.RECT.Height - gap.y2 });
+                                    _dividerHs.Add(new DividerList(it.RECT.Right, it.RECT.Y + gap.y, it.RECT.Height - gap.y2));
                                 }
                             }
-                            if (visibleHeader) _dividers.Add(new int[] { row.RECT.Bottom, rect.X, rect_real.Width });
+                            if (visibleHeader) _dividers.Add(new DividerList(row.RECT.Bottom, rect.X, rect_real.Width));
                         }
                         else
                         {
-                            if (bordered) _dividers.Add(new int[] { row.RECT.Bottom, rect.X, rect_real.Width });
-                            else _dividers.Add(new int[] { row.RECT.Bottom, row.RECT.X, row.RECT.Width });
+                            if (bordered) _dividers.Add(new DividerList(row.RECT.Bottom, rect.X, rect_real.Width));
+                            else _dividers.Add(new DividerList(row.RECT.Bottom, row.RECT.X, row.RECT.Width));
                         }
                     }
                     if (bordered && !isempty) _dividers.RemoveAt(_dividers.Count - 1);
@@ -537,8 +537,8 @@ namespace AntdUI
                 }
                 else
                 {
-                    dividers = new int[0][];
-                    dividerHs = new int[0][];
+                    dividers = new DividerList[0];
+                    dividerHs = new DividerList[0];
                 }
                 moveheaders = MoveHeaders.ToArray();
             });
@@ -1079,43 +1079,39 @@ namespace AntdUI
             return row;
         }
 
-        string? OGetValue(TempTable data_temp, int i_r, string key)
+        string? OGetValue(object record, object? value)
         {
-            if (data_temp.rows[i_r].cells.TryGetValue(key, out var value))
+            if (value is AntItem item)
             {
-                if (value is AntItem item)
+                var val = item.value;
+                if (val is IList<ICell> icells)
                 {
-                    var val = item.value;
-                    if (val is IList<ICell> icells)
+                    var vals = new List<string>(icells.Count);
+                    foreach (var cell in icells)
                     {
-                        var vals = new List<string>(icells.Count);
-                        foreach (var cell in icells)
-                        {
-                            var str = cell.ToString();
-                            if (!string.IsNullOrEmpty(str)) vals.Add(str);
-                        }
-                        return string.Join(" ", vals);
+                        var str = cell.ToString();
+                        if (!string.IsNullOrEmpty(str)) vals.Add(str);
                     }
-                    else return val?.ToString();
+                    return string.Join(" ", vals);
                 }
-                else if (value is PropertyDescriptor prop)
-                {
-                    var val = prop.GetValue(data_temp.rows[i_r].record);
-                    if (val is IList<ICell> icells)
-                    {
-                        var vals = new List<string>(icells.Count);
-                        foreach (var cell in icells)
-                        {
-                            var str = cell.ToString();
-                            if (!string.IsNullOrEmpty(str)) vals.Add(str);
-                        }
-                        return string.Join(" ", vals);
-                    }
-                    else return val?.ToString();
-                }
-                else return value?.ToString();
+                else return val?.ToString();
             }
-            return null;
+            else if (value is PropertyDescriptor prop)
+            {
+                var val = prop.GetValue(record);
+                if (val is IList<ICell> icells)
+                {
+                    var vals = new List<string>(icells.Count);
+                    foreach (var cell in icells)
+                    {
+                        var str = cell.ToString();
+                        if (!string.IsNullOrEmpty(str)) vals.Add(str);
+                    }
+                    return string.Join(" ", vals);
+                }
+                else return val?.ToString();
+            }
+            else return value?.ToString();
         }
 
         object? OGetValue(object? ov, object record, out PropertyDescriptor? property, out object? value)

@@ -1,5 +1,14 @@
 [首页](Home.md)・[更新日志](UpdateLog.md)・[配置](Config.md)・[主题](Theme.md)
 
+### `2.3.13` 2026-05-12
+
+- ➕ Input VirtualMode
+- ✍️ Table 虚拟模式
+- ✍️ Table 筛选大量数据新增加载
+- ✍️ Spin 导致一些气泡无法正常关闭
+- ✍️ Input 选中替换输入文本错位
+- ✍️ DatePicker 允许标头的完全本地化
+
 ### `2.3.12` 2026-04-30
 
 - ➕ Label PrefixColour/SuffixColour

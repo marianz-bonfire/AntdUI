@@ -48,6 +48,20 @@ namespace AntdUI
             public int width { get; set; }
             public int min_width { get; set; }
         }
+        internal class DividerList
+        {
+            public DividerList(int A, int B, int C)
+            {
+                a = A;
+                b = B;
+                c = C;
+            }
+
+            public int a { get; set; }
+            public int b { get; set; }
+            public int c { get; set; }
+            public bool h { get; set; } = true;
+        }
 
         internal class DragHeader
         {

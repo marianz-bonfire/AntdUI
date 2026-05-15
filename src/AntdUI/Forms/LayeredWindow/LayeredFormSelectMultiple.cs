@@ -322,12 +322,7 @@ namespace AntdUI
 
         void DrawTextIconSelect(Canvas g, ObjectItem it, Color? fore, Color? foreSub, Font font)
         {
-            if (it.SubText != null)
-            {
-                var size = g.MeasureText(it.Text, font);
-                var rectSubText = new Rectangle(it.RectText.X + size.Width, it.RectText.Y, it.RectText.Width - size.Width, it.RectText.Height);
-                g.DrawText(it.SubText, font, foreSub ?? it.ForeSub ?? Colour.TextQuaternary.Get(name, ColorScheme), rectSubText, sf);
-            }
+            if (it.SubText != null) g.DrawText(it.SubText, font, foreSub ?? it.ForeSub ?? Colour.TextQuaternary.Get(name, ColorScheme), it.RectSubText, sf);
             if (it.Enable)
             {
                 using (var brush = new SolidBrush(fore ?? Colour.TextBase.Get(name, ColorScheme)))
@@ -346,12 +341,7 @@ namespace AntdUI
         }
         void DrawTextIcon(Canvas g, ObjectItem it, SolidBrush brush, Color? color, Color? foreSub, Font font)
         {
-            if (it.SubText != null)
-            {
-                var size = g.MeasureText(it.Text, font);
-                var rectSubText = new Rectangle(it.RectText.X + size.Width, it.RectText.Y, it.RectText.Width - size.Width, it.RectText.Height);
-                g.DrawText(it.SubText, font, foreSub ?? it.ForeSub ?? Colour.TextQuaternary.Get(name, ColorScheme), rectSubText, sf);
-            }
+            if (it.SubText != null) g.DrawText(it.SubText, font, foreSub ?? it.ForeSub ?? Colour.TextQuaternary.Get(name, ColorScheme), it.RectSubText, sf);
             if (it.Enable)
             {
                 if (color.HasValue) g.DrawText(it.Text, font, color.Value, it.RectText, sf);
@@ -406,6 +396,7 @@ namespace AntdUI
                 }
                 else
                 {
+                    ItemMaxWidth2(g, items);
                     maxwr = width - padd2;
                     maxw = maxwr - gap_x2;
                     sf |= FormatFlags.EllipsisCharacter;
@@ -475,7 +466,13 @@ namespace AntdUI
             if (obj is SelectItem it)
             {
                 if (it.IconRatio.HasValue) icon_size = (int)(text_height * it.IconRatio.Value);
-                int tmp = g.MeasureText(it.Text + it.SubText, Font).Width;
+                int tmp = it.TextWidth = g.MeasureText(it.Text, Font).Width;
+                tmp += icon_size;
+                if (it.SubText != null)
+                {
+                    it.SubTextWidth = g.MeasureText(it.SubText, Font).Width;
+                    tmp += it.SubTextWidth + icon_gap;
+                }
                 if (it.Online > -1) tmp += icon_size;
                 if (it.Icon != null || it.IconSvg != null) tmp += icon_size + icon_gap;
                 if (it.Sub != null && it.Sub.Count > 0) tmp += icon_size + icon_gap;
@@ -489,6 +486,18 @@ namespace AntdUI
                 if (text == null) return 0;
                 var size = g.MeasureText(text, Font);
                 return size.Width;
+            }
+        }
+        void ItemMaxWidth2(Canvas g, IList<object> items)
+        {
+            foreach (var item in items)
+            {
+                if (item is SelectItem it)
+                {
+                    if (it.SubText == null) continue;
+                    it.TextWidth = g.MeasureText(it.Text, Font).Width;
+                    it.SubTextWidth = g.MeasureText(it.SubText, Font).Width;
+                }
             }
         }
         ObjectItem ItemC(object value, int i, ref int item_count, ref int divider_count, ref int y, int padd, int padd2, int sp, int gap_x, int gap_x2, int icon_size, int icon_gap, int icon_xy, int item_height, int text_height, int maxwr, ref int sy, bool no_id = true)
@@ -511,28 +520,27 @@ namespace AntdUI
                         icon_size = (int)(text_height * it.IconRatio.Value);
                         icon_xy = (item_height - icon_size) / 2;
                     }
-                    int ux = gap_x, uw = gap_x2;
+                    int ux = gap_x;
                     item = new ObjectItem(it, i, rect) { NoIndex = no_id };
                     if (it.Online > -1)
                     {
                         int dot_xy = (item_height - icon_gap) / 2;
                         item.RectOnline = new Rectangle(rect.X + ux + icon_gap / 2, rect.Y + dot_xy, icon_gap, icon_gap);
                         ux += icon_size;
-                        uw += icon_size;
                     }
                     if (item.HasIcon)
                     {
                         int tmp = icon_size + icon_gap;
                         item.RectIcon = new Rectangle(rect.X + ux, rect.Y + icon_xy, icon_size, icon_size);
                         ux += tmp;
-                        uw += tmp;
                     }
-                    if (item.HasSub)
+                    if (item.HasSub) item.RectArrow = new Rectangle(rect.Right - gap_x - icon_size, rect.Y + icon_xy, icon_size, icon_size);
+                    if (it.SubText == null) item.RectText = new Rectangle(rect.X + ux, rect.Y, it.TextWidth, rect.Height);
+                    else
                     {
-                        item.RectArrow = new Rectangle(rect.Right - gap_x - icon_size, rect.Y + icon_xy, icon_size, icon_size);
-                        uw += icon_size + icon_gap;
+                        item.RectText = new Rectangle(rect.X + ux, rect.Y, it.TextWidth, rect.Height);
+                        item.RectSubText = new Rectangle(rect.X + ux + it.TextWidth + icon_gap, item.RectText.Y, it.SubTextWidth, item.RectText.Height);
                     }
-                    item.RectText = new Rectangle(rect.X + ux, rect.Y, rect.Width - uw, rect.Height);
                 }
                 else item = new ObjectItem(value, i, rect, new Rectangle(rect.X + gap_x, rect.Y, rect.Width - gap_x2, rect.Height)) { NoIndex = no_id };
                 if (sy == 0 && selectedValue.Contains(item.Tag)) sy = y;

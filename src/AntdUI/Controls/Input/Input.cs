@@ -2679,6 +2679,7 @@ namespace AntdUI
             switch (id)
             {
                 case EventType.LANG:
+                    CalculateRect();
                     BeforeAutoSize();
                     break;
             }

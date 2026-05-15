@@ -686,7 +686,7 @@ namespace AntdUI
             {
                 if (part.Href != null && part.Bounds.Contains(e.Location))
                 {
-                    OnLinkClicked(part.Href, part.Text);
+                    OnLinkClicked(part.Href, part.Text, part.Bounds);
                     return;
                 }
             }
@@ -708,13 +708,13 @@ namespace AntdUI
             if (count > 0) Invalidate();
         }
 
-        protected virtual void OnLinkClicked(string href, string text)
+        protected virtual void OnLinkClicked(string href, string text, Rectangle rect)
         {
             if (LinkAutoNavigation && Uri.TryCreate(href, UriKind.Absolute, out _))
             {
                 if (href.ProcessShellOpen()) return;
             }
-            LinkClicked?.Invoke(this, new LinkClickedEventArgs(href, text));
+            LinkClicked?.Invoke(this, new LinkClickedEventArgs(href, text, rect));
         }
 
         #endregion
@@ -725,10 +725,12 @@ namespace AntdUI
         {
             public string Href { get; private set; }
             public string Text { get; private set; }
-            public LinkClickedEventArgs(string href, string text)
+            public Rectangle Rect { get; private set; }
+            public LinkClickedEventArgs(string href, string text, Rectangle rect)
             {
                 Href = href;
                 Text = text;
+                Rect = rect;
             }
         }
 
